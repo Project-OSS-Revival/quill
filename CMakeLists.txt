@@ -15,6 +15,10 @@ option(QUILL_DISABLE_NON_PREFIXED_MACROS "Enable this option to disable non-pref
 
 option(QUILL_DISABLE_FUNCTION_NAME "Disable the use of __FUNCTION__ in `LOG_*` macros when the function name is not needed." OFF)
 
+option(QUILL_DETAILED_FUNCTION_NAME "Use detailed function name (__PRETTY_FUNCTION__ or __FUNCSIG__) instead of __FUNCTION__ in LOG_* macros" OFF)
+
+option(QUILL_DISABLE_FILE_INFO "Disable the use of __FILE__ and __LINE__ in `LOG_*` macros when the file name and the line number are not needed." OFF)
+
 option(QUILL_BUILD_EXAMPLES "Enable this option to build and install the examples. Set this to ON to include example projects in the build process and have them installed after configuring with CMake." OFF)
 
 option(QUILL_BUILD_TESTS "Enable this option to build the test suite." OFF)
@@ -119,6 +123,8 @@ message(STATUS "QUILL_NO_THREAD_NAME_SUPPORT: " ${QUILL_NO_THREAD_NAME_SUPPORT})
 message(STATUS "QUILL_X86ARCH: " ${QUILL_X86ARCH})
 message(STATUS "QUILL_DISABLE_NON_PREFIXED_MACROS: " ${QUILL_DISABLE_NON_PREFIXED_MACROS})
 message(STATUS "QUILL_DISABLE_FUNCTION_NAME: " ${QUILL_DISABLE_FUNCTION_NAME})
+message(STATUS "QUILL_DETAILED_FUNCTION_NAME: " ${QUILL_DETAILED_FUNCTION_NAME})
+message(STATUS "QUILL_DISABLE_FILE_INFO: " ${QUILL_DISABLE_FILE_INFO})
 message(STATUS "QUILL_ENABLE_INSTALL: " ${QUILL_ENABLE_INSTALL})
 
 #---------------------------------------------------------------------------------------
@@ -210,6 +216,7 @@ set(HEADER_FILES
         include/quill/core/QuillError.h
         include/quill/core/Rdtsc.h
         include/quill/core/SinkManager.h
+        include/quill/core/SourceLocation.h
         include/quill/core/Spinlock.h
         include/quill/core/ThreadContextManager.h
         include/quill/core/TimeUtilities.h
@@ -249,10 +256,13 @@ set(HEADER_FILES
 
         include/quill/Backend.h
         include/quill/BackendTscClock.h
+        include/quill/BinaryDataDeferredFormatCodec.h
         include/quill/CsvWriter.h
         include/quill/DeferredFormatCodec.h
         include/quill/DirectFormatCodec.h
         include/quill/Frontend.h
+        include/quill/HelperMacros.h
+        include/quill/LogFunctions.h
         include/quill/Logger.h
         include/quill/LogMacros.h
         include/quill/StopWatch.h
@@ -283,6 +293,14 @@ endif ()
 
 if (QUILL_DISABLE_FUNCTION_NAME)
     target_compile_definitions(${TARGET_NAME} PUBLIC INTERFACE -DQUILL_DISABLE_FUNCTION_NAME)
+endif ()
+
+if (QUILL_DETAILED_FUNCTION_NAME)
+    target_compile_definitions(${TARGET_NAME} PUBLIC INTERFACE -DQUILL_DETAILED_FUNCTION_NAME)
+endif ()
+
+if (QUILL_DISABLE_FILE_INFO)
+    target_compile_definitions(${TARGET_NAME} PUBLIC INTERFACE -DQUILL_DISABLE_FILE_INFO)
 endif ()
 
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
@@ -401,7 +419,7 @@ endif ()
 if (QUILL_DOCS_GEN)
     if (NOT QUILL_BUILD_EXAMPLES)
         message(FATAL_ERROR "QUILL_DOCS_GEN requires QUILL_BUILD_EXAMPLES to be ON. Please enable QUILL_BUILD_EXAMPLES.")
-    endif()
+    endif ()
 
     add_subdirectory(docs)
 endif ()
